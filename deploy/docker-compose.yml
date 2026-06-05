@@ -1,10 +1,12 @@
+---
 # ==============================================================================
 # Docker Compose манифест для Chrony NTP-сервера
 # @file docker-compose.yml
 # @brief Оркестрация контейнеризированного NTP-сервера
 # @author Коноплев Г ( ZeyPlay@mail.ru )
+# @author Живенко О ( olegjivencko@gmail.com )
 # @date 2026-06-05
-# @version 1.0.0
+# @version 1.1.0
 # @license GNU GPLv3 <https://gnu.org>
 # ==============================================================================
 
@@ -15,28 +17,28 @@ services:
       dockerfile: Dockerfile
     container_name: chrony_ntp_server
     restart: unless-stopped
-    
+
     # Изолированная сеть
     networks:
       - backend-net
-    
+
     # Проброс UDP порта 123
     ports:
       - "123:123/udp"
-    
+
     # Монтирование конфигураций
     volumes:
       - ../config/chrony/chrony.conf:/etc/chrony/chrony.conf:ro
       - chrony_drift:/var/lib/chrony
-    
+
     # Секреты (ключи NTP)
     secrets:
       - ntp_keys
-    
+
     # Capability для синхронизации времени
     cap_add:
       - SYS_TIME
-    
+
     # Healthcheck
     healthcheck:
       test: ["CMD", "chronyc", "tracking"]
@@ -44,13 +46,58 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    
+
     # Логирование
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
+
+
+  chrony-exporter:
+    build:
+      context: ..
+      dockerfile: Dockerfile.exporter
+    ports:
+      - "9123:9123"
+    depends_on:
+      - chrony
+    networks:
+      - backend-net
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - chrony-exporter
+    networks:
+      - backend-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ../config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - backend-net
+    restart: unless-stopped
+
 
 networks:
   backend-net:

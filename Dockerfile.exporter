@@ -1,0 +1,16 @@
+# syntax=docker/dockerfile:1
+FROM python:3.11-alpine
+
+RUN addgroup -S exporter && adduser -S exporter -G exporter
+
+WORKDIR /app
+
+COPY scripts/chrony_exporter.py .
+
+RUN chown exporter:exporter chrony_exporter.py && chmod +x chrony_exporter.py
+
+USER exporter
+
+EXPOSE 9123
+
+CMD ["python", "chrony_exporter.py"]
