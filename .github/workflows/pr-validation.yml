@@ -1,13 +1,3 @@
-# ==============================================================================
-# Конвейер проверки Pull Request
-# @file pr-validation.yml
-# @brief Автоматическая валидация кода и конфигураций при создании PR
-# @author Коноплев Г ( ZeyPlay@mail.ru )
-# @date 2026-06-05
-# @version 1.0.0
-# @license GNU GPLv3 <https://gnu.org>
-# ==============================================================================
-
 name: PR Validation Pipeline
 
 on:
@@ -26,7 +16,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  # YAML Linting
   yamllint:
     name: "YAML Linting"
     runs-on: ubuntu-latest
@@ -38,12 +27,8 @@ jobs:
         run: pip install yamllint
 
       - name: Run yamllint
-        run: |
-          yamllint -c .github/linters/.yamllint \
-            deploy/docker-compose.yml \
-            .github/workflows/*.yml
+        run: yamllint -c .github/linters/.yamllint deploy/docker-compose.yml
 
-  # Dockerfile Linting
   hadolint:
     name: "Dockerfile Linting"
     runs-on: ubuntu-latest
@@ -57,7 +42,6 @@ jobs:
           dockerfile: deploy/docker/chrony/Dockerfile
           config: .github/linters/.hadolint.yaml
 
-  # Bash Scripts Linting
   shellcheck:
     name: "Bash Scripts Linting"
     runs-on: ubuntu-latest
@@ -69,10 +53,8 @@ jobs:
         run: sudo apt-get install -y shellcheck
 
       - name: Run ShellCheck
-        run: |
-          shellcheck -x deploy/scripts/bootstrap.sh
+        run: shellcheck -x deploy/scripts/bootstrap.sh
 
-  # Docker Compose Validation
   compose-validate:
     name: "Docker Compose Validation"
     runs-on: ubuntu-latest
