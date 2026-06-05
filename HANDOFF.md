@@ -3,9 +3,6 @@
 **От:** Коноплев Г (DevOps Engineer)  
 **Дата:** 2026-06-05  
 **Статус:** Инфраструктура готова ✅
-
----
-
 ## ✅ Что сделано (Участник 1):
 
 ### Инфраструктура:
@@ -16,8 +13,6 @@
 - [x] CI/CD pipeline (pr-validation.yml)
 - [x] GitHub templates (PR, Issues)
 
-### Статус контейнера:
-```bash
 cd deploy
 docker compose ps
 # STATUS: Up (healthy)
