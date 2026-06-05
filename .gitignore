@@ -79,3 +79,6 @@ thesis/sources/slides/*.pdf
 *.tar.gz
 *.tgz
 *.rar
+*.keys
+*.key
+chrony.keys
