@@ -1,0 +1,71 @@
+# ==============================================================================
+# Docker Compose манифест для Chrony NTP-сервера
+# @file docker-compose.yml
+# @brief Оркестрация контейнеризированного NTP-сервера
+# @author Коноплев Г ( ZeyPlay@mail.ru )
+# @date 2026-06-05
+# @version 1.0.0
+# @license GNU GPLv3 <https://gnu.org>
+# ==============================================================================
+
+services:
+  chrony:
+    build:
+      context: ./docker/chrony
+      dockerfile: Dockerfile
+    container_name: chrony_ntp_server
+    restart: unless-stopped
+    
+    # Изолированная сеть
+    networks:
+      - backend-net
+    
+    # Проброс UDP порта 123
+    ports:
+      - "123:123/udp"
+    
+    # Монтирование конфигураций
+    volumes:
+      - ../config/chrony/chrony.conf:/etc/chrony/chrony.conf:ro
+      - chrony_drift:/var/lib/chrony
+    
+    # Секреты (ключи NTP)
+    secrets:
+      - ntp_keys
+    
+    # Capability для синхронизации времени
+    cap_add:
+      - SYS_TIME
+    
+    # Healthcheck
+    healthcheck:
+      test: ["CMD", "chronyc", "tracking"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Логирование
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  backend-net:
+    driver: bridge
+    name: chrony_backend_net
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  chrony_drift:
+    name: chrony_drift_data
+    driver: local
+
+secrets:
+  ntp_keys:
+    file: ../config/chrony/chrony.keys

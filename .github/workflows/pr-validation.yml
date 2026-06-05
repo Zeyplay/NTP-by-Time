@@ -1,0 +1,87 @@
+# ==============================================================================
+# Конвейер проверки Pull Request
+# @file pr-validation.yml
+# @brief Автоматическая валидация кода и конфигураций при создании PR
+# @author Коноплев Г ( ZeyPlay@mail.ru )
+# @date 2026-06-05
+# @version 1.0.0
+# @license GNU GPLv3 <https://gnu.org>
+# ==============================================================================
+
+name: PR Validation Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - 'thesis/**'
+      - 'docs/**'
+      - 'README.md'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # YAML Linting
+  yamllint:
+    name: "YAML Linting"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Run yamllint
+        run: |
+          yamllint -c .github/linters/.yamllint \
+            deploy/docker-compose.yml \
+            .github/workflows/*.yml
+
+  # Dockerfile Linting
+  hadolint:
+    name: "Dockerfile Linting"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: deploy/docker/chrony/Dockerfile
+          config: .github/linters/.hadolint.yaml
+
+  # Bash Scripts Linting
+  shellcheck:
+    name: "Bash Scripts Linting"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck
+        run: |
+          shellcheck -x deploy/scripts/bootstrap.sh
+
+  # Docker Compose Validation
+  compose-validate:
+    name: "Docker Compose Validation"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: |
+          cd deploy
+          docker compose config --quiet
+          echo "SUCCESS: docker-compose.yml is valid"

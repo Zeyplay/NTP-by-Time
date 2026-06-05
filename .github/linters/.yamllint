@@ -1,0 +1,28 @@
+---
+extends: default
+rules:
+  # Требовать отступы строго в 2 пробела
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  
+  # Ограничение длины строки (120 символов)
+  line-length:
+    max: 120
+    allow-non-breakable-words: true
+  
+  # Запретить использование символов табуляции
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+  
+  # Контроль пустых строк
+  empty-lines:
+    max: 2
+  
+  # Требовать пустую строку в конце файла (POSIX стандарт)
+  new-line-at-end-of-file: enable
+  
+  # Контроль пробелов возле двоеточий
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
