@@ -3,8 +3,9 @@
 # @file docker-compose.yml
 # @brief Оркестрация контейнеризированного NTP-сервера
 # @author Коноплев Г ( ZeyPlay@mail.ru )
+# @author Живенко О ( olegjivencko@gmail.com )
 # @date 2026-06-05
-# @version 1.0.0
+# @version 1.1.0
 # @license GNU GPLv3 <https://gnu.org>
 # ==============================================================================
 
@@ -51,6 +52,51 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+
+  chrony-exporter:
+    build:
+      context: ..
+      dockerfile: Dockerfile.exporter
+    ports:
+      - "9123:9123"
+    depends_on:
+      - chrony
+    networks:
+      - backend-net
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - chrony-exporter
+    networks:
+      - backend-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.0.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ../config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../config/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - backend-net
+    restart: unless-stopped
+
 
 networks:
   backend-net:
