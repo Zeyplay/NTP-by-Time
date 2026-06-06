@@ -11,12 +11,12 @@
 services:
   chrony:
     build:
-      context: ./docker/chrony
-      dockerfile: Dockerfile
+      context: ../
+      dockerfile: deploy/docker/chrony/Dockerfile
     container_name: chrony_ntp_server
     restart: unless-stopped
 
-    # Capability для синхронизации времени (ОБЯЗАТЕЛЬНО!)
+    # Capability для синхронизации времени (ОБЯЗАТЕЛЬНО для non-root!)
     cap_add:
       - SYS_TIME
 
@@ -28,13 +28,9 @@ services:
     ports:
       - "123:123/udp"
 
-    # Монтирование конфигураций
+    # Монтирование конфигураций (read-only)
     volumes:
-      # Конфиг в режиме read-only
       - ../config/chrony/chrony.conf:/etc/chrony/chrony.conf:ro
-      # Ключи аутентификации
-      - ../config/chrony/chrony.keys:/run/chrony/keys:ro
-      # Driftfile (данные, которые должны сохраняться)
       - chrony_drift:/var/lib/chrony
 
     # Healthcheck
