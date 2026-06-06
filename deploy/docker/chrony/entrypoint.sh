@@ -1,12 +1,19 @@
 #!/bin/sh
+# ==============================================================================
+# Скрипт запуска Chrony
 # @file entrypoint.sh
-# @brief Скрипт запуска Chrony с переключением на непривилегированного пользователя
-# @author Коноплев Г ( ZeyPlay@mail.ru )
-# @date 2026-06-05
+# @brief Инициализация и запуск chronyd с переключением на непривилегированного пользователя
+# @author Коноплев Г. (ZeyPlay@mail.ru)
+# @date 2026-06-06
 # @version 1.0.0
+# @license GNU GPLv3 <https://gnu.org>
+# ==============================================================================
 
 set -e
 
-# Запуск chronyd от root (нужно для capability SYS_TIME)
-# Флаг -u chrony переключает на непривилегированного пользователя после инициализации
-exec chronyd -d -f /etc/chrony/chrony.conf -u chrony
+# Запуск chronyd в foreground режиме
+# -d: debug mode (foreground)
+# -n: не переходить в background
+# -f: файл конфигурации
+# -u chrony: переключиться на пользователя chrony после инициализации
+exec chronyd -d -n -f /etc/chrony/chrony.conf -u chrony
